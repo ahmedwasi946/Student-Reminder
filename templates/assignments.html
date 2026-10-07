@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_macros.html" import arow with context %}
+{% block title %}Assignments | Student Reminder{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Assignments</h1>
+  <p class="lede">Deadlines are checked against your academic calendar, so clashes with holidays and MST weeks are flagged.</p>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Add an assignment</h2></div>
+  {% if not subjects %}
+  <p class="empty">You need a subject first. <a href="{{ url_for('timetable') }}">Set up your timetable</a> or <a href="{{ url_for('attendance') }}">add a subject</a>.</p>
+  {% else %}
+  <form method="post" class="form-row">
+    <div>
+      <label for="subject_id">Subject</label>
+      <select id="subject_id" name="subject_id" required>
+        <option value="" disabled selected>Choose a subject</option>
+        {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="title">Assignment name</label>
+      <input id="title" name="title" type="text" maxlength="120" required>
+    </div>
+    <div>
+      <label for="deadline">Deadline</label>
+      <input id="deadline" name="deadline" type="date" min="{{ today }}" required>
+    </div>
+    <button type="submit" class="btn">Save</button>
+  </form>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  {% endif %}
+</section>
+
+{% if overdue %}
+<section class="card card-danger">
+  <div class="card-head"><h2>Overdue ({{ overdue|length }})</h2></div>
+  <ul class="rows">{% for a in overdue %}{{ arow(a) }}{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Upcoming ({{ upcoming|length }})</h2></div>
+  {% if upcoming %}
+  <ul class="rows">{% for a in upcoming %}{{ arow(a) }}{% endfor %}</ul>
+  {% else %}
+  <p class="empty">Nothing upcoming. Add an assignment above when you get one.</p>
+  {% endif %}
+</section>
+
+{% if completed %}
+<section class="card">
+  <details>
+    <summary>Completed ({{ completed|length }})</summary>
+    <ul class="rows done-list">
+      {% for a in completed %}
+      <li class="row done">
+        <div class="when">Done</div>
+        <div class="what"><strong>{{ a.title }}</strong><span>{{ a.subject }}, {{ a.date_text }}</span></div>
+        <div class="actions">
+          <form method="post" action="{{ url_for('mark_done', aid=a.id) }}"><button class="small ghost">Undo</button></form>
+          <form method="post" action="{{ url_for('delete_assignment', aid=a.id) }}"><button class="small ghost">Delete</button></form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+</section>
+{% endif %}
+{% endblock %}

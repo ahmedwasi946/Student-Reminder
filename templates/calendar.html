@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Calendar | Student Reminder{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Academic calendar</h1>
+  <p class="lede">{{ sem.label }}: teaching runs {{ start_text }} to {{ end_text }}, {{ teaching_days }} teaching days in total. The small number in a day is the teaching day number, the same one printed on the college calendar.</p>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Key dates</h2></div>
+  {% if events %}
+  <ul class="events">
+    {% for e in events %}
+    <li class="event {{ e.kind }}">
+      <strong>{{ e.name }}</strong>
+      <span>{{ e.range }}</span>
+      <span class="when-small">{{ e.when }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No more events this semester.</p>
+  {% endif %}
+</section>
+
+<ul class="legend" aria-label="Legend">
+  <li><i class="sw class"></i>Teaching day</li>
+  <li><i class="sw holiday"></i>Holiday</li>
+  <li><i class="sw training"></i>Training</li>
+  <li><i class="sw mst"></i>MST</li>
+  <li><i class="sw exam"></i>Exam</li>
+  <li><i class="sw off"></i>Day off</li>
+  <li><i class="sw due"></i>Assignment due</li>
+</ul>
+
+<div class="months">
+  {% for m in months %}
+  <section class="card month">
+    <h2>{{ m.title }}</h2>
+    <table class="cal">
+      <thead><tr>{% for h in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for week in m.weeks %}
+        <tr>
+          {% for c in week %}
+            {% if c %}
+            <td class="day {{ c.kind }}{% if c.today %} today{% endif %}" title="{{ c.tip }}">
+              <span class="d">{{ c.day }}</span>
+              {% if c.label %}<span class="lab">{{ c.label }}</span>{% elif c.num %}<span class="num">{{ c.num }}</span>{% endif %}
+              {% if c.due %}<span class="due">{{ c.due }} due</span>{% endif %}
+            </td>
+            {% else %}
+            <td class="day blank"></td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

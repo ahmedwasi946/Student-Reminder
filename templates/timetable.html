@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Timetable | Student Reminder{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Weekly timetable</h1>
+  <p class="lede">{{ sem_label }}. Today's column is highlighted. Classes that run over two periods count as one class for attendance.</p>
+</div>
+
+{% if not rows %}
+<section class="card setup">
+  <h2>No timetable yet</h2>
+  <p>Load a ready-made timetable, or add your classes one by one below.</p>
+  {% if presets %}
+  <form method="post" action="{{ url_for('load_timetable_preset') }}" class="preset-form">
+    {% for key, label in presets %}
+    <button name="preset" value="{{ key }}" class="btn">Load {{ label }}</button>
+    {% endfor %}
+  </form>
+  {% else %}
+  <p class="muted">There is no ready-made timetable for this semester yet, so add your classes below.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="tt-wrap">
+    <table class="tt">
+      <thead>
+        <tr>
+          <th class="tt-time"><span class="sr">Period</span></th>
+          {% for dname in days %}<th class="{% if loop.index0 == today_idx %}today{% endif %}">{{ dname }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in grid %}
+        <tr>
+          <th class="tt-time" scope="row"><strong>{{ row.period }}</strong><span>{{ row.time }}</span></th>
+          {% for cell in row.cells %}
+            {% if cell is not none %}
+            <td rowspan="{{ cell.span }}" class="{{ cell.cls }}{% if loop.index0 == today_idx %} today{% endif %}">{{ cell.subject }}</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% if row.period == 4 %}
+        <tr class="lunch"><th class="tt-time"></th><td colspan="6">Lunch, 1:35 to 2:10</td></tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Edit your timetable</h2></div>
+  <form method="post" action="{{ url_for('add_class') }}" class="form-row form-row-5">
+    <div>
+      <label for="day">Day</label>
+      <select id="day" name="day" required>
+        {% for dname in day_names %}<option value="{{ loop.index0 }}">{{ dname }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="subject">Subject</label>
+      <input id="subject" name="subject" type="text" maxlength="60" list="known-subjects" required>
+      <datalist id="known-subjects">{% for n in subject_names %}<option value="{{ n }}">{% endfor %}</datalist>
+    </div>
+    <div>
+      <label for="start_period">From period</label>
+      <select id="start_period" name="start_period">{% for p in periods %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
+    </div>
+    <div>
+      <label for="end_period">To period</label>
+      <select id="end_period" name="end_period">{% for p in periods %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select>
+    </div>
+    <button type="submit" class="btn">Add class</button>
+    <label class="check"><input type="checkbox" name="tracked" checked> Count attendance for this class</label>
+  </form>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  {% if rows %}
+  <h3 class="list-title">Your classes</h3>
+  <ul class="class-list">
+    {% for r in rows %}
+    <li>
+      <span class="cl-day">{{ day_names[r.day] }}</span>
+      <span class="cl-per">{% if r.start_period == r.end_period %}Period {{ r.start_period }}{% else %}Periods {{ r.start_period }} to {{ r.end_period }}{% endif %}</span>
+      <strong>{{ r.subject }}</strong>
+      {% if not r.tracked %}<span class="muted">not counted</span>{% endif %}
+      <form method="post" action="{{ url_for('delete_class', cid=r.id) }}"><button class="small ghost">Remove</button></form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

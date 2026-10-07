@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bar with context %}
+{% block title %}Attendance | Student Reminder{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Attendance</h1>
+  <p class="lede">
+    {% if has_timetable %}
+    Classes held are counted from your timetable and the academic calendar, from {{ sem_start }}. Holidays, training and MST weeks are skipped. Enter only how many classes you have <strong>missed</strong>. Teaching ends on {{ sem_end }}.
+    {% else %}
+    Set up your <a href="{{ url_for('timetable') }}">timetable</a> and the app counts classes held for you. Until then, add subjects by hand below.
+    {% endif %}
+  </p>
+</div>
+
+<section class="tiles tiles-3" aria-label="Attendance summary">
+  <div class="tile {% if att.low %}tile-warn{% endif %}">
+    <span class="tile-label">Overall attendance</span>
+    <span class="tile-value">{% if att.overall is not none %}{{ '%.0f'|format(att.overall) }}%{% else %}--{% endif %}</span>
+    <span class="tile-sub">Across all subjects with classes held</span>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Below {{ target }}%</span>
+    <span class="tile-value">{{ att.low }}</span>
+    <span class="tile-sub">{% if att.low %}Needs attention{% else %}Nothing in shortage{% endif %}</span>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Lowest subject</span>
+    <span class="tile-value tile-text">{{ att.lowest.name if att.lowest else '--' }}</span>
+    <span class="tile-sub">{% if att.lowest %}{{ '%.0f'|format(att.lowest.pct) }}% attendance{% else %}No classes held yet{% endif %}</span>
+  </div>
+</section>
+
+<section>
+  {% if subjects %}
+  <div class="att-grid">
+    {% for s in subjects %}
+    <div class="card att-card">
+      {{ bar(s) }}
+      <div class="actions">
+        {% if s.auto %}
+        <form method="post" action="{{ url_for('set_missed', sid=s.id) }}" class="inline">
+          <label for="missed-{{ s.id }}" class="sr">Classes missed in {{ s.name }}</label>
+          <input id="missed-{{ s.id }}" name="missed" type="number" min="0" value="{{ s.missed }}" class="num">
+          <button class="small">Save missed</button>
+        </form>
+        <form method="post" action="{{ url_for('mark_absent', sid=s.id) }}"><button class="small ghost">Missed one more</button></form>
+        {% else %}
+        <form method="post" action="{{ url_for('mark_present', sid=s.id) }}"><button class="small">Attended a class</button></form>
+        <form method="post" action="{{ url_for('mark_absent', sid=s.id) }}"><button class="small ghost">Missed a class</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('delete_subject', sid=s.id) }}"
+              onsubmit="return confirm('Delete {{ s.name|e }} and its assignments?')"><button class="small ghost">Delete</button></form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty card">No subjects yet. Set up your timetable or add one below.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Add a subject by hand</h2></div>
+  <p class="muted">For subjects that are not in your timetable. You enter both numbers yourself.</p>
+  <form method="post" class="form-row">
+    <div>
+      <label for="name">Subject name</label>
+      <input id="name" name="name" type="text" maxlength="60" required>
+    </div>
+    <div>
+      <label for="attended">Classes attended</label>
+      <input id="attended" name="attended" type="number" min="0" value="0" required>
+    </div>
+    <div>
+      <label for="total">Total classes so far</label>
+      <input id="total" name="total" type="number" min="0" value="0" required>
+    </div>
+    <button type="submit" class="btn">Add</button>
+  </form>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+</section>
+{% endblock %}

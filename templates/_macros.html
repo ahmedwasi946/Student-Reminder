@@ -1,0 +1,32 @@
+{% macro bar(s) %}
+<div class="att {{ s.status }}">
+  <div class="att-head">
+    <strong>{{ s.name }}</strong>
+    <span class="pct">
+      {% if s.pct is not none %}{{ '%.0f'|format(s.pct) }}%{% if s.status == 'low' %} <em>Low</em>{% endif %}{% else %}No data{% endif %}
+    </span>
+  </div>
+  <div class="track" role="img" aria-label="{{ s.name }} attendance">
+    <div class="fill" style="width: {{ '%.1f'|format(s.pct or 0) }}%"></div>
+    <div class="mark" title="{{ target }}% required"></div>
+  </div>
+  <p class="note">{{ s.attended }} of {{ s.held }} classes attended{% if s.auto %} ({{ s.missed }} missed){% endif %}. {{ s.note }}</p>
+</div>
+{% endmacro %}
+
+{% macro arow(a, with_actions=True) %}
+<li class="row {{ a.level }}">
+  <div class="when">{{ a.badge }}</div>
+  <div class="what">
+    <strong>{{ a.title }}</strong>
+    <span>{{ a.subject }}, {{ a.date_text }}</span>
+    {% if a.note %}<span class="flag">{{ a.note }}</span>{% endif %}
+  </div>
+  {% if with_actions %}
+  <div class="actions">
+    <form method="post" action="{{ url_for('mark_done', aid=a.id) }}"><button class="small">Mark done</button></form>
+    <form method="post" action="{{ url_for('delete_assignment', aid=a.id) }}"><button class="small ghost">Delete</button></form>
+  </div>
+  {% endif %}
+</li>
+{% endmacro %}

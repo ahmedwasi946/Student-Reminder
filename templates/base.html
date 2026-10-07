@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Student Reminder{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% if name and request.endpoint != 'welcome' %}
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('dashboard') }}">Student Reminder</a>
+      <nav aria-label="Main">
+        {% for ep, label in [('dashboard', 'Dashboard'), ('assignments', 'Assignments'), ('attendance', 'Attendance'), ('timetable', 'Timetable'), ('calendar_page', 'Calendar')] %}
+        <a href="{{ url_for(ep) }}" {% if request.endpoint == ep %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </nav>
+      <div class="topbar-right">
+        <button id="notify-btn" type="button" class="small ghost" hidden>Enable reminders</button>
+        <a class="who" href="{{ url_for('welcome') }}" title="Change name or semester">{{ name }}</a>
+      </div>
+    </div>
+  </header>
+  <script src="{{ url_for('static', filename='notify.js') }}" defer></script>
+  {% endif %}
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

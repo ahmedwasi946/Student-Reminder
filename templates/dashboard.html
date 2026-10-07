@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bar, arow with context %}
+{% block content %}
+<section class="hero">
+  <p class="chip">{{ sem_label }}</p>
+  <h1>{{ greeting }}, {{ name }}.</h1>
+  <p class="lede">{{ summary }}</p>
+</section>
+
+<section class="tiles" aria-label="Overview">
+  <a class="tile" href="{{ url_for('assignments') }}">
+    <span class="tile-label">Pending assignments</span>
+    <span class="tile-value">{{ pending|length }}</span>
+    <span class="tile-sub">{% if soon_count %}{{ soon_count }} need attention soon{% else %}None due in the next 2 days{% endif %}</span>
+  </a>
+  <a class="tile {% if att.low %}tile-warn{% endif %}" href="{{ url_for('attendance') }}">
+    <span class="tile-label">Overall attendance</span>
+    <span class="tile-value">{% if att.overall is not none %}{{ '%.0f'|format(att.overall) }}%{% else %}--{% endif %}</span>
+    <span class="tile-sub">{% if att.low %}{{ att.low }} subject{{ 's' if att.low != 1 }} below {{ target }}%{% elif att.overall is not none %}All subjects at {{ target }}% or above{% else %}No classes held yet{% endif %}</span>
+  </a>
+  <a class="tile" href="{{ url_for('timetable') }}">
+    <span class="tile-label">Classes today</span>
+    <span class="tile-value">{{ classes|length }}</span>
+    <span class="tile-sub">{% if upcoming_class %}{{ 'Now' if upcoming_class.status == 'now' else 'Next' }}: {{ upcoming_class.subject }}{% elif classes %}All done for today{% else %}{{ no_class_reason }}{% endif %}</span>
+  </a>
+  <a class="tile" href="{{ url_for('calendar_page') }}">
+    <span class="tile-label">Next on the calendar</span>
+    <span class="tile-value tile-text">{{ next_event.name if next_event else 'Nothing scheduled' }}</span>
+    <span class="tile-sub">{% if next_event %}{{ next_event.when }}, {{ next_event.range }}{% else %}No more events this semester{% endif %}</span>
+  </a>
+</section>
+
+{% if alerts %}
+<section class="alerts" role="alert">
+  <h2>Reminders</h2>
+  <ul>
+    {% for a in alerts %}
+    <li class="{{ a.level }}"><strong>{{ a.title }}</strong> ({{ a.subject }}) is {{ a.text|lower }}.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head">
+      <h2>Today's classes</h2>
+      <a href="{{ url_for('timetable') }}">Full timetable</a>
+    </div>
+    {% if classes %}
+    <ul class="classes">
+      {% for c in classes %}
+      <li class="class {{ c.status }}">
+        <span class="class-time">{{ c.time }}</span>
+        <strong>{{ c.subject }}</strong>
+        <span class="status-pill">{{ 'Done' if c.status == 'done' else 'In progress' if c.status == 'now' else 'Later' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">{{ no_class_reason }}{% if 'timetable' in no_class_reason %} <a href="{{ url_for('timetable') }}">Set it up</a>{% endif %}</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Upcoming deadlines</h2>
+      <a href="{{ url_for('assignments') }}">All assignments</a>
+    </div>
+    {% if pending %}
+    <ul class="rows compact">
+      {% for a in pending[:4] %}{{ arow(a, False) }}{% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No pending assignments. <a href="{{ url_for('assignments') }}">Add one</a> when you get it.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Attendance snapshot</h2>
+    <a href="{{ url_for('attendance') }}">All {{ subject_count }} subjects</a>
+  </div>
+  {% if attention %}
+  <p class="muted">Lowest first. The tick on each bar marks {{ target }}%.</p>
+  <div class="att-grid">
+    {% for s in attention %}{{ bar(s) }}{% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No attendance data yet. <a href="{{ url_for('timetable') }}">Set up your timetable</a> or <a href="{{ url_for('attendance') }}">add a subject</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}

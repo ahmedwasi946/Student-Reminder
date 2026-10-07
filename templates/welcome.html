@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Welcome | Student Reminder{% endblock %}
+{% block content %}
+<section class="welcome">
+  <p class="chip">Student Reminder</p>
+  <h1>What's your name?</h1>
+  <p class="lede">Your dashboard will greet you with it. Pick your semester so the calendar matches your batch.</p>
+  <form method="post" class="card form"
+        data-current="{{ stored_semester or '' }}"
+        onsubmit="return !this.dataset.current || this.semester.value === this.dataset.current || confirm('Changing semester clears your timetable and the subjects built from it. Continue?')">
+    <label for="name">Full name</label>
+    <input id="name" name="name" type="text" maxlength="60" value="{{ current or '' }}" autocomplete="name" autofocus required>
+
+    <label for="semester">Semester</label>
+    <select id="semester" name="semester" required>
+      {% for key, s in semesters %}
+      <option value="{{ key }}" {% if key == current_sem %}selected{% endif %}>{{ s.label }}</option>
+      {% endfor %}
+    </select>
+
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <button type="submit" class="btn">Continue</button>
+  </form>
+</section>
+{% endblock %}
